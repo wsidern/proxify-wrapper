@@ -1,0 +1,16 @@
+{
+  "name": "proxifyre-wrapper",
+  "version": "0.0.0",
+  "license": "MIT",
+  "main": "main.js",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^35.1.5"
+  },
+  "scripts": {
+    "start": "electron --enable-transparent-visuals ."
+  },
+  "dependencies": {
+    "electron-acrylic-window": "^0.5.11"
+  }
+}

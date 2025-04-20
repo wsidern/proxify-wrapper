@@ -1,0 +1,18 @@
+{
+    "proxies": [
+        {
+            "appNames": [
+                "zenserver",
+                "EpicGamesLauncher",
+                "UnrealEditor",
+                "EpicWebHelper",
+                "Discord"
+            ],
+            "socks5ProxyEndpoint": "127.0.0.1:2080",
+            "supportedProtocols": [
+                "TCP",
+                "UDP"
+            ]
+        }
+    ]
+}

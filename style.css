@@ -1,0 +1,212 @@
+:root {
+  --top-bar-height: 20px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  vertical-align: baseline;
+}
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+}
+h1 {
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  line-height: 1.2;
+
+}
+p {
+  margin-top: 10px;
+  color: rgba(255,255,255,0.4);
+}
+
+body {
+  background-color: rgba(0, 183, 255, 0.8);
+  margin: 0px auto; 
+  overflow: hidden; 
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+}
+
+.background {
+  position: absolute;
+  z-index: -999;
+  height: 100%;
+  overflow: hidden;
+  left: 20%;
+  animation-name: Appearance;
+  animation-duration: 3s;
+  animation-timing-function: cubic-bezier(.1,-.6,.2,0);
+}
+
+@keyframes Appearance {
+  0% {opacity: 0;}
+  100% {opacity: 1;}
+}
+
+.top-bar {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  background-color: rgba(13, 34, 27, 0.164);
+  /* height: var(--top-bar-height); */
+  gap: 8px;
+  -webkit-app-region: drag;
+  font-size: 16px;
+}
+.title {
+  user-select: none;
+}
+
+.top-bar-controls {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+.top-bar-controls > div{
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+  height: 20px;
+  background-color: rgb(164, 164, 200);
+  -webkit-app-region: no-drag;
+}
+.top-bar-controls > div:hover {
+  background-color: rgb(96, 96, 117);
+}
+
+.main {
+  height: calc(100% - 20px);
+  width: 100%;
+  border: 2px solid #518cb3;
+  border-top: none;
+}
+
+.init-settings {
+  padding: 8px;
+}
+
+.change-file {
+  z-index: 1;
+  justify-content: space-between;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  height: 30px;
+  width: 150px;
+  /* background-color: white; */
+}
+.change-file input {
+  display: none;
+}
+.file-path {
+  display: flex;
+  user-select: none;
+}
+
+/* .file-button {
+
+} */
+
+.file-button:hover {
+  background-color: rgb(96, 96, 117);
+  cursor: pointer;
+}
+
+.block-grey {
+  background-color: rgb(164, 164, 200);
+  padding: 2px;
+}
+.block-error {
+  background-color: rgb(185, 77, 77);
+  padding: 2px;
+}
+
+.custom-button {
+  text-align: center;
+  align-content: center;
+
+  border-radius: 8px;
+  padding: 0;
+  margin: 0;
+  width: 115px;
+  height: 30px;
+  
+  color: white;
+  cursor: pointer;
+}
+
+.checkbox-process {
+  display: none;
+}
+
+.app-block {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  background-color: bisque;
+}
+.add-app {
+  display: flex;
+  flex-direction: row;
+  background-color: rgb(12, 161, 42);
+}
+.add-app > button {
+  width: 80px;
+  height: 20px;
+}
+.add-app > input {
+  width: 150px;
+  height: 20px;
+}
+.add-app > p {
+  width: 150px;
+}
+
+.apps-list {
+  background-color: rgba(0, 255, 255, 0.574);
+  width: 500px;
+  height: 250px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+.apps-container > div {
+  display: flex;
+  flex-direction: row;
+}
+.app-elem {
+  background-color: rgb(130, 131, 136);
+  color: white;
+  padding: 2px;
+  width: 300px;
+  user-select: none;
+  cursor: pointer;
+}
+.app-elem-selected {
+  background-color: rgb(60, 61, 66);
+  color: white;
+  padding: 2px;
+  width: 300px;
+}
+
+.proxy-settings {
+  background-color: rgb(127, 187, 255);
+  width: 300px;
+}
+
+.protocol {
+  background-color: aquamarine;
+  display: flex;
+  justify-content: space-between;
+  width: 55px;
+}

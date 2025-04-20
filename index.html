@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'"> -->
+  <title>ProxifTre wrapper</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="background">
+    <img src="images/background-image.png">
+  </div>
+  <header class="top-bar" id="top-bar">
+    <div class="title">ProxyFyre Wrapper</div>
+    <div class="top-bar-controls">
+      <div class="top-bar-hide" id="hide">hide</div>
+      <div class="top-bar-exit" id="exit">exit</div>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="init-settings">
+      <div class="change-file">
+        <label for="file" class="file-button block-grey">Выберите файл</label>
+        <input id="file" type="file">
+      </div>
+      <div class="file-path">
+        <div class="block-grey">Путь к ProxiFyre: </div>
+        <div id="path" class="block-grey"></div>
+      </div>
+    </div>
+
+    <div class="app-block">
+      <div class="apps-list">
+        <div>Current Apps:</div>
+        <div class="search-container">
+          <input class="input-search" type="text" id="search">
+        </div>
+        <div class="apps-container" id="apps">
+          <!-- <div>
+            <input class="checkbox-process" type="checkbox" id="test">
+            <div class="app-elem">test</div>
+          </div>
+          <div>
+            <input class="checkbox-process" type="checkbox" id="testss">
+            <div class="app-elem-selected">testss</div>
+          </div>
+          <div>
+            <input class="checkbox-process" type="checkbox" id="testss">
+            <div class="app-elem">testsstestsstestsstestsstestsstestsstestsstestsstestsstestsstestsstestsstestss</div>
+          </div> -->
+        </div>
+      </div>
+      <div class="add-app">
+        <div>Enter app name</div>
+        <input type="text">
+        <button>Add app</button>
+      </div>
+    </div>
+
+    <div>
+      <div>Proxy Management</div>
+      <div>
+        <button>save</button>
+      </div>
+      <div class="proxy-settings">
+        <div class="endpoint-settings">
+          <div>Enter endpoint:</div>
+          <input id="text" type="text">
+          <label for="text" class="custom-button">save</label>
+        </div>
+        <div class="protocol">
+          <label for="checkbox">TCP</label>
+          <input type="checkbox" title="TCP">
+        </div>
+        <div class="protocol">
+          <label for="checkbox">UDP</label>
+          <input type="checkbox" title="UDP">
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="control-buttons-contrainer">
+        <button>start</button>
+        <button>stop</button>
+        <button>restart</button>
+        <button>Autostart</button>
+      </div>
+      <div>enabled/disabled</div>
+    </div>
+
+    <div id="logs"></div>
+
+  </div>
+</body>
+
+</html>
