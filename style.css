@@ -145,10 +145,6 @@ body {
   cursor: pointer;
 }
 
-.checkbox-process {
-  display: none;
-}
-
 .app-block {
   display: flex;
   flex-direction: row;

@@ -1,48 +1,108 @@
+const { exec } = require('node:child_process');
+const fs = require('fs');
+const { readFileSync } = require("node:fs");
+const { EventEmitter } = require("node:stream");
 
-class MainApi {
-  constructor() {
-    this.initInfo = {
-      proxiFyrePath: "",
-      includedApps: [],
-      processList: [],
-      autostart: false,
-    };
-    this.setProcessList();
-  };
-  setPath(path) {
-    this.initInfo.proxiFyrePath = path;
-  }
-  setAutostart(autostart) {
-    this.initInfo.autostart = autostart;
-  }
-  setProcessList() {
-    exec('powershell "Get-Process | Select-Object Name, Id"', (error, stdout, stderr) => {
-      if (error) {
-          console.error(`Ошибка: ${error.message}`);
-          return;
-      }
-      if (stderr) {
-          console.error(`Сбой: ${stderr}`);
-          return;
-      }
-  
-      this.initInfo.processList = stdout
-        .trim()
-        .split('\n')
-        .slice(2)
-        .sort()
-        .map((line) => {
-          const parts = line.trim().split(/\s{2,}/);
-          return parts[0];
-        })
-  
-        console.log(`Запущенные процессы: ${processList.length}`);
-    });
-  }
-  setIncludedApps(apps) {
-    this.initInfo.includedApps = apps;
-  }
-
+/*
+  App props
+*/
+let initInfo = {
+  includedApps: [],
+  processList: [],
 };
 
-module.exports = new MainApi();
+/*
+  Main config file
+*/
+
+const initEvent = new EventEmitter();
+const api = {
+  setAppProcessList: (list) => {
+    initInfo.processList = list;
+    initEvent.emit("init-process-update");
+  },
+  setIncludedApps: (apps) => {
+    // initInfo.includedApps = apps;
+    // initEvent.emit("init-included-apps-update");
+  },
+  setAutostart: (autostart) => {
+    initEvent.emit("init-autostart-update", autostart);
+  },
+
+  /*
+    utils
+  */
+  getProcessListFromSystem: async () => {
+    return new Promise((resolve, reject) => {
+      exec('powershell "Get-Process | Select-Object Name, Id"', (error, stdout, stderr) => {
+        if (error) {
+            return reject(`Ошибка: ${error.message}`);
+        }
+        if (stderr) {
+            return reject(`Сбой: ${stderr}`);
+        }
+
+        const list = stdout
+          .trim()
+          .split('\n')
+          .sort()
+          .map((line) => {
+            const parts = line.trim().split(/\s{2,}/);
+            return parts[0];
+          })
+
+        const result = Array.from(new Set(list))
+          .filter((item) => {
+            if (!initInfo.includedApps.includes(item)) {
+              return item;
+            }
+          })
+
+        resolve(result);
+
+      });
+    })
+  },
+  getConfig: () => {
+    const data = readFileSync('config.json', "utf-8");
+    return JSON.parse(data);
+  },
+  setConfig: (jsonData) => {
+    let data = JSON.stringify(jsonData, null, 2);
+
+    fs.writeFile("config.json", data, 'utf8', (err) => {
+      if (err) {
+          console.error('Error writing to file', err)
+      } else {
+          console.log('Data written to file')
+      }
+    });
+  },
+};
+
+/* 
+  Initializing settings after startup.
+*/
+initSettings();
+
+async function initSettings() {
+  console.log("Initializing settings after startup.");
+
+  let list = await api.getProcessListFromSystem()
+    .then((data) => {
+      return data;
+    })
+    .catch((err) => {
+      console.log(err);
+      return [];
+    });
+  
+  api.setAppProcessList(list);
+  
+}
+
+module.exports = {
+  ...api,
+  initEvent,
+  getInitInfo: () => initInfo,
+};

@@ -2,19 +2,26 @@
 
 const { app, globalShortcut, ipcMain, nativeImage } = require("electron")
 const { BrowserWindow, setVibrancy } = require("electron-acrylic-window");
-
+const { EventEmitter } = require("node:stream");
 const path = require("node:path")
-const fs = require('fs');
-const { readFileSync } = require("node:fs");
-const { spawn, exec } = require('node:child_process');
 
-const { config, setConfig } = require("./Api/configApi");
-const { initInfo, setPath, setIncludedApps  } = require("./Api/mainApi");
+const {
+  initEvent,
+  getInitInfo,
+  getConfig,
+  setPropsPath,
+  setConfig,
+  setIncludedApps,
+  setAutostart
+} = require("./api/mainApi");
 
-let win = null;
-let proxiFyreProcess = null;
-// let proxiFyrePath = "C:/Users/R/Desktop/vpn/proxy/Proxifyre.exe";
-// let processList = [];
+let win, proxiFyreProcess = null;
+let config = getConfig();
+
+// utilities
+function addCommandLine(...args) {
+  app.commandLine.appendSwitch(...args);
+};
 
 const options = {
   theme: '#00b7ff80',
@@ -23,7 +30,48 @@ const options = {
   maximumRefreshRate: 2,
 }
 
-function createWindow () {
+/*
+        Events for check to update initInfo
+*/
+
+
+/*
+  receive path from user action and set to config file
+*/
+ipcMain.on("path-from-user", (_event, path) => {
+  console.log("Send selected path: ", path)
+  setConfig({
+    ...config,
+    path: path,
+  })
+  win.webContents.send("init-path-info", path);
+});
+
+initEvent.on("init-process-update", () => {
+  if (win) {
+    const initInfo = getInitInfo();
+    win.webContents.send("init-process-info", initInfo.processList);
+    console.log("process list updated: ", initInfo.processList.length)
+  }
+});
+
+
+function appQuit() {
+  if (proxiFyreProcess) {
+    proxiFyreProcess.kill();
+  }
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+  console.log("quit")
+}
+
+app.whenReady().then(() => {
+  addCommandLine('high-dpi-support', 'true');
+  addCommandLine('force-device-scale-factor', '1');
+  addCommandLine('enable-gpu');
+  addCommandLine('enable-transparent-visuals');
+
   win = new BrowserWindow({
     minWidth: 800,
     minHeight: 600,
@@ -31,6 +79,8 @@ function createWindow () {
     height: 768,
     icon: "./images/app-ico2.ico",
     resizable: false,
+    minimizable: false,
+    maximizable: false,
     frame: false,
     transparent: true,
     vibrancy: {
@@ -44,48 +94,18 @@ function createWindow () {
   win.loadFile('index.html');
   win.setOverlayIcon(nativeImage.createFromPath('bar-icon.png'), 'Description for overlay');
   win.webContents.openDevTools();
-
   setVibrancy(win, options);
-}
-
-function sendInitInfo() {
-  win.webContents.send("init-info", initInfo);
-}
-
-
-function appQuit() {
-  if (proxiFyreProcess) {
-    proxiFyreProcess.kill();
+  if (config.path) {
+    win.webContents.send("init-path-info", config.path);
   }
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-  console.log("quit")
-}
-
-ipcMain.on("set-path", (event, path) => {
-  
-})
-
-app.whenReady().then(() => {
-  app.commandLine.appendSwitch('high-dpi-support', 'true');
-  app.commandLine.appendSwitch('force-device-scale-factor', '1');
-  app.commandLine.appendSwitch('enable-gpu');
-  app.commandLine.appendSwitch('enable-transparent-visuals');
-
-  function onAppReady() {
-    createWindow()
-    app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-          createWindow();
-      } 
-    })
-  }
-  setTimeout(onAppReady, 1000);
 })
 
 ipcMain.on("start-process", () => {
-  
+  if (!config.path) {
+    // send event to set path
+    return
+  };
+
   // if(!proxiFyreProcess) {
   //   proxiFyreProcess = spawn(config.path);
 

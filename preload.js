@@ -1,110 +1,126 @@
 'use strict';
-const { ipcRenderer, webUtils } = require("electron");
+const { ipcRenderer, webUtils, app } = require("electron");
 
-let state;
-
-let apps;
-let searchTemp = new Set();
-
-function closeApp(e) {
+function onCloseApp(e) {
   e.preventDefault()
   ipcRenderer.send('close-app');
 }
-function setPath(path) {
-  document.getElementById("path").textContent = path;
-}
-function pathErrorHandler() {
-  document.getElementById("path").classList.add("block-error")
-};
-function pathAcceptHandler() {
-  document.getElementById("path").classList.remove("block-error")
-};
-function getFilePath() {
-  const path = webUtils.getPathForFile(document.getElementById("file").files[0]);
+function setPathToElement(path) {
   const haveProxiFyre = path.includes("ProxiFyre.exe");
   if (haveProxiFyre) {
-    pathAcceptHandler();
-    setPath(path)
-    ipcRenderer.send('set-path', path);
+    pathHandler();
   } else {
-    pathErrorHandler();
-    setPath(path)
+    pathHandler("err")
+  }
+  document.getElementById("path").textContent = path;
+}
+function pathHandler(type) {
+  if (type === "err") {
+    document.getElementById("path").classList.add("block-error")
+  } else {
+    document.getElementById("path").classList.remove("block-error")
   }
 };
+function getFilePath() {
+  return webUtils.getPathForFile(document.getElementById("file").files[0]);
+};
+
+function setPath(path) {
+  setPathToElement(path);
+  ipcRenderer.send('path-from-user', path);
+}
+
+function fileOnChange() {
+  const path = getFilePath();
+  setPath(path);
+}
+
 
 function bindInteract() {
-  document.getElementById("exit").addEventListener("click", closeApp);
-  document.getElementById("file").addEventListener("change", getFilePath);
-  document.getElementById("search").addEventListener("input", searchApp);
+  document.getElementById("exit").addEventListener("click", onCloseApp);
+  document.getElementById("file").addEventListener("change", fileOnChange);
+  document.getElementById("search").addEventListener("input", (event) => onInputSearch(event.target.value));
+  document.getElementById("setApps").addEventListener("click", onPickedApps);
 
   console.log("binded");
 };
 
+function setDragListener(elem) {
+  document.getElementById(elem).ondrag(() => {});
+}
 
-// process list control
-// function selectProcesses() {
-//   const container = document.getElementById("apps");
-//   const childs = Array.from(container.children);
+let appsTemp = [];
+let appsSelectedTemp = new Set();
+let pickedApps = new Set();
 
-//   childs.map((item) => {
-//     if (selected.has(item.firstChild.id)) {
-//       item.classList.add("app-elem-selected");
-//     } else {
-//       item.classList.remove("app-elem-selected");
-//     }
-//   })
-// }
-// function addProcess(checkbox) {
-//   const isChecked = checkbox.checked;
-//   const id = checkbox.id;
-//   if (isChecked) {
-//     selected.add(id);
-//   } else if (selected.has(id)) {
-//     selected.delete(id);
-//   };
-//   // selectProcesses()
-// }
-// function changeCheckbox(container, checkbox) {
-//   checkbox.checked = !checkbox.checked;
-//   console.log()
-//   const selected = container.classList.contains("app-elem-selected");
+function selectProcess(appContainer, checkbox) {
+  checkbox.checked = !checkbox.checked;
+  if (checkbox.checked){
+    appsSelectedTemp.add(appContainer.textContent)
+    appContainer.classList.add("app-elem-selected")
+  } else {
+    appsSelectedTemp.delete(appContainer.textContent)
+    appContainer.classList.remove("app-elem-selected")
+  }
+  console.log(appsSelectedTemp);
+}
 
-//   if (checkbox && selected) {
-//     console.log("eeee")
-//     container.classList.remove("app-elem-selected");
-//     addProcess(checkbox);
-//   } else if (checkbox) {
-//     addProcess(checkbox);
-//   }
-// }
+function createAppElement(app, onClick) {
+    let {name, id} = app;  
 
-// function setCurrentApps(appsList) {
-//   for (let index = 0; index < appsList.length; index++) {
-//     let container = document.createElement("div");
-//     container.classList.add("app-elem");
+    const appContainer = document.createElement("div");
 
-//     let item = document.createElement("div");
-//     item.textContent = appsList[index];
+    const elem = document.createElement("div");
+    elem.classList.add("app-elem");
+    elem.textContent = name;
+    elem.addEventListener("click", (event) => onClick(event.target, checkbox));
+    elem.addEventListener("drag", (event) => {
+      console.log("drag")
+    });
 
-//     let checkbox = document.createElement("input");
-//     checkbox.type = "checkbox";
-//     checkbox.id = appsList[index];
-//     checkbox.classList.add("checkbox-process");
+    let checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.style.display = "none";
+    checkbox.id = name + "_" + id;
+
     
-//     container.append(checkbox);
-//     container.append(item);
-//     container.addEventListener("click", (event) => changeCheckbox(container, checkbox))
+    if (appsSelectedTemp.has(name)) {
+      elem.classList.add("app-elem-selected")
+      checkbox.checked = true;
+    }
+  
+    appContainer.append(elem);
+    appContainer.append(checkbox);
 
-//     document.getElementById("apps").append(container);
-//   }
-// }
+  return appContainer;
+}
 
+function setProcesses(list) {
+  // console.log(list)
+  const mainContainer = document.getElementById("apps");
+  for (let i = 0; i < list.length; i++) {
+    const name = list[i];
+    const appContainer = createAppElement({name: name, id: i}, selectProcess);
 
-function searchApp(event) {
-  let value = event.target.value;
+    if (appsSelectedTemp.has(name)) {
+      mainContainer.prepend(appContainer);
+    } else {
+      mainContainer.append(appContainer);
+    }
 
-  apps.filter((item) => {
+  }
+};
+
+function clearProcesses(id) {
+  document.getElementById(id).textContent = "";
+}
+
+function onInputSearch(value) {
+  let searchTemp = new Set();
+
+  appsTemp.forEach((item) => {
     const match = item.toLowerCase().includes(value.toLowerCase())
+    if (pickedApps.has(item)) return;
     if (match) {
       searchTemp.add(item);
     } else {
@@ -112,22 +128,65 @@ function searchApp(event) {
     }
   });
 
-  console.log(searchTemp)
-
-  // document.getElementById("apps").textContent = '';
-  // setCurrentApps(Array.from(searchTemp));
-  // selectProcesses()
+  clearProcesses("apps");
+  setProcesses(Array.from(searchTemp));
 };
 
-ipcRenderer.on('init-info', (event, initInfo) => {
+function createSelectedApps(list) {
+  const pickedAppsContainer = document.getElementById("pickedApps");
+
+  clearProcesses("pickedApps");
+  for (let i = 0; i < list.length; i++) {
+    const name = list[i];
+    const appContainer = createAppElement({name: name, id: i}, selectProcess);
+    pickedAppsContainer.append(appContainer);
+  }
+}
+
+function onPickedApps() {
+  if (appsSelectedTemp.length === 0) return;
+
+  let result = appsTemp.filter((item) => {
+    if (appsSelectedTemp.has(item) && pickedApps.has(item)) {
+      pickedApps.delete(item)
+    } else if (appsSelectedTemp.has(item)) {
+      pickedApps.add(item)
+    }
+
+    if (pickedApps.has(item)) return false
+    return true
+  })
+
+  appsSelectedTemp.clear();
+  clearProcesses("apps");
+
+  const inputValue = document.getElementById("search").value;
+  if (inputValue.length > 0) {
+    onInputSearch(inputValue);
+  } else {
+    setProcesses(result);
+  }
+
+  createSelectedApps(Array.from(pickedApps));
+  ipcRenderer.send('send-apps-to-config', Array.from(pickedApps));
+}
+
+/*
+  event listeners from main.js
+*/
+ipcRenderer.on('init-path-info', (_event, path) => {
+  console.log(path)
+  setPathToElement(path);
 });
-ipcRenderer.on('set-process-list', (event, appsList) => {
-  apps = appsList
+ipcRenderer.on('init-process-info', (_event, list) => {
+  console.log("list")
+  setProcesses(list)
+  appsTemp = list;
 });
 
 // ipcRenderer.on('init-path', (event, path) => {
 //   console.log("RECEIVE PATH: ", path)
-//   setPath(path);
+// //   setPath(path);
 // });
 
 // ipcRenderer.on("path-error", () => {
